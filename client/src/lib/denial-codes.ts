@@ -270,6 +270,87 @@ export const eligibilityStatusOptions = [
   { value: "unknown", label: "Unknown" }
 ];
 
+// Helper function to analyze and parse Q&A format responses
+function parseQAResponse(notes: string, denialCode: string): string {
+  if (!notes || notes.trim().length === 0) return "";
+  
+  // Check if this looks like a Q&A response (contains common patterns)
+  const qaPatterns = [
+    /medicare/i, /mcr/i, /aetna/i, /no.*billed/i, /primary/i, /secondary/i,
+    /1st/i, /2nd/i, /never.*billed/i, /cob/i, /coordination/i
+  ];
+  
+  const hasQAFormat = qaPatterns.some(pattern => pattern.test(notes));
+  
+  if (hasQAFormat && denialCode === 'CO-22') {
+    // Specifically handle CO-22 (COB) responses
+    return parseCoordinationOfBenefitsResponse(notes);
+  }
+  
+  // Fall back to general improvement
+  return improveAdditionalNotes(notes);
+}
+
+// Specific parser for CO-22 (Coordination of Benefits) responses
+function parseCoordinationOfBenefitsResponse(notes: string): string {
+  const lowerNotes = notes.toLowerCase();
+  
+  // Extract insurance information
+  const insuranceNames = [];
+  if (lowerNotes.includes('medicare') || lowerNotes.includes('mcr')) {
+    insuranceNames.push('Medicare');
+  }
+  if (lowerNotes.includes('aetna')) {
+    insuranceNames.push('Aetna');
+  }
+  if (lowerNotes.includes('bcbs') || lowerNotes.includes('blue cross')) {
+    insuranceNames.push('Blue Cross Blue Shield');
+  }
+  if (lowerNotes.includes('uhc') || lowerNotes.includes('united')) {
+    insuranceNames.push('United Healthcare');
+  }
+  
+  // Determine primary insurance
+  let primaryInsurance = '';
+  if (lowerNotes.includes('medicare') && (lowerNotes.includes('primary') || lowerNotes.includes('1st'))) {
+    primaryInsurance = 'Medicare';
+  } else if (insuranceNames.length > 0) {
+    primaryInsurance = insuranceNames[0];
+  }
+  
+  // Check if primary was billed first
+  const primaryNotBilled = lowerNotes.includes('never billed') || 
+                          lowerNotes.includes('not billed') || 
+                          lowerNotes.includes('no prim');
+  
+  // Build intelligent response
+  let response = '';
+  
+  if (insuranceNames.length > 1) {
+    response = `Patient has ${insuranceNames.join(' and ')}. `;
+  } else if (insuranceNames.length === 1) {
+    response = `Patient has ${insuranceNames[0]}. `;
+  }
+  
+  if (primaryInsurance) {
+    response += `${primaryInsurance} should be primary`;
+    if (primaryNotBilled) {
+      response += ', but it was not billed first. ';
+    } else {
+      response += '. ';
+    }
+  }
+  
+  if (insuranceNames.length > 1) {
+    const secondary = insuranceNames.find(name => name !== primaryInsurance);
+    if (secondary) {
+      response += `COB order is ${primaryInsurance} primary, then ${secondary} secondary.`;
+    }
+  }
+  
+  return response || improveAdditionalNotes(notes);
+}
+
 // Helper function to clean and improve additional notes
 function improveAdditionalNotes(notes: string): string {
   if (!notes || notes.trim().length === 0) return "";
@@ -297,7 +378,10 @@ function improveAdditionalNotes(notes: string): string {
     'reimb': 'reimbursement',
     'coord': 'coordination',
     'benefts': 'benefits',
-    'eligibilty': 'eligibility'
+    'eligibilty': 'eligibility',
+    'mcr': 'Medicare',
+    'prim': 'primary',
+    'biled': 'billed'
   };
   
   let improved = notes.toLowerCase().trim();
@@ -396,8 +480,8 @@ export function generateRCMComment(formData: any): string {
       specificComment = `Denial documented per rep guidance`;
   }
   
-  // Add improved additional notes if available
-  const improvedNotes = improveAdditionalNotes(formData.additionalNotes);
+  // Use intelligent Q&A parsing for additional notes
+  const improvedNotes = parseQAResponse(formData.additionalNotes, formData.denialCode);
   const additionalInfo = improvedNotes ? ` Additional notes: ${improvedNotes}` : "";
   
   return `Spoke with ${repName} from ${insuranceName} - ${denialCode}: ${specificComment}.${additionalInfo} Call ref #${callReference}`;

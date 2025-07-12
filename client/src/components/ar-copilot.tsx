@@ -122,8 +122,14 @@ export default function ARCopilot() {
       const response = await apiRequest("POST", "/api/accounts", data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (newAccount) => {
       queryClient.invalidateQueries({ queryKey: ["/api/accounts", sessionId] });
+      // Update persisted accounts immediately
+      const updatedAccounts = [...accounts, newAccount];
+      setPersistedAccounts(updatedAccounts);
+      saveToSessionStorage(ACCOUNTS_STORAGE_KEY, updatedAccounts);
+      // Set new account as active
+      setActiveTabId(newAccount.id);
       toast({ title: "Success", description: "New patient account created" });
     },
     onError: () => {
@@ -150,9 +156,14 @@ export default function ARCopilot() {
   const deleteAccountMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("DELETE", `/api/accounts/${id}`);
+      return id;
     },
-    onSuccess: () => {
+    onSuccess: (deletedId) => {
       queryClient.invalidateQueries({ queryKey: ["/api/accounts", sessionId] });
+      // Update persisted accounts immediately
+      const updatedAccounts = accounts.filter(acc => acc.id !== deletedId);
+      setPersistedAccounts(updatedAccounts);
+      saveToSessionStorage(ACCOUNTS_STORAGE_KEY, updatedAccounts);
       toast({ title: "Success", description: "Patient account deleted" });
     },
     onError: () => {
