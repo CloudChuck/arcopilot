@@ -275,65 +275,60 @@ export function generateRCMComment(formData: any): string {
   const insuranceName = getInsuranceLabel(formData.insuranceName) || "[Insurance]";
   const denialCode = formData.denialCode || "[Code]";
   const callReference = formData.callReference || "[Reference]";
-  const dos = formData.dateOfService || "[DOS]";
-  const patientName = formData.patientName || "[Patient]";
-  const accountNumber = formData.accountNumber || "[Account]";
   
   let specificComment = "";
   
   switch (formData.denialCode) {
     case "CO-27":
-      specificComment = `Patient eligibility confirmed ${formData.eligibilityStatus || "status pending"} as of ${formData.eligibilityFromDate || "[Date]"}. Coverage terminated prior to DOS ${dos}. Advised patient responsible for charges`;
+      specificComment = `Eligibility ${formData.eligibilityStatus || "inactive"} as of ${formData.eligibilityFromDate || "[Date]"}. Coverage terminated prior to DOS. Patient responsibility confirmed`;
       break;
     case "CO-97":
-      specificComment = `Service bundled with primary procedure per payer policy. Payment included in comprehensive service allowance. ${formData.additionalNotes ? "Notes: " + formData.additionalNotes : "No additional reimbursement available"}`;
+      specificComment = `Service bundled with primary procedure per payer policy. No additional payment available`;
       break;
     case "PR-204":
-      specificComment = `Service not covered under current benefit plan limitations. ${formData.eligibilityStatus === "active" ? "Patient eligibility active but specific service excluded per plan benefits" : "Coverage verification required for service authorization"}`;
+      specificComment = `Service not covered under current plan benefits. Plan exclusion confirmed`;
       break;
     case "CO-50":
-      specificComment = `Service denied due to medical necessity criteria not met per payer guidelines. ${formData.additionalNotes ? "Documentation reviewed: " + formData.additionalNotes : "Additional clinical documentation may be required for appeal"}`;
+      specificComment = `Medical necessity criteria not met per payer guidelines. Additional documentation required for appeal`;
       break;
     case "CO-16":
-      specificComment = `Claim denied for missing/incorrect information. ${formData.additionalNotes ? "Specific issue: " + formData.additionalNotes : "Correction and resubmission required per payer specifications"}`;
+      specificComment = `Missing/incorrect information identified. Correction and resubmission required`;
       break;
     case "CO-18":
-      specificComment = `Duplicate claim submission identified. Original claim processing confirmed. No additional payment due`;
+      specificComment = `Duplicate claim identified. Original claim already processed`;
       break;
     case "CO-22":
-      specificComment = `Coordination of benefits issue - other payer responsible. ${formData.additionalNotes ? "COB details: " + formData.additionalNotes : "Primary payer verification required before resubmission"}`;
+      specificComment = `COB issue - other payer primary. Primary insurance must be billed first`;
       break;
     case "CO-29":
-      specificComment = `Timely filing deadline exceeded for DOS ${dos}. Claim submission deadline missed per payer policy`;
+      specificComment = `Timely filing deadline exceeded. Claim submitted beyond payer deadline`;
       break;
     case "CO-45":
-      specificComment = `Charge exceeds contracted fee schedule allowance. Payment adjusted to contracted rate per provider agreement`;
+      specificComment = `Charge exceeds fee schedule. Payment adjusted to contracted rate`;
       break;
     case "CO-96":
-      specificComment = `Service determined non-covered per plan benefits. ${formData.additionalNotes ? "Remark codes: " + formData.additionalNotes : "Plan exclusion applies"}`;
+      specificComment = `Non-covered service per plan benefits. Plan exclusion applies`;
       break;
     case "CO-109":
-      specificComment = `Incorrect payer - claim must be submitted to appropriate insurance carrier. ${formData.additionalNotes ? "Correct payer info: " + formData.additionalNotes : "Insurance verification required"}`;
+      specificComment = `Wrong payer - claim must go to correct insurance carrier`;
       break;
     case "CO-151":
-      specificComment = `Service frequency/quantity exceeds payer guidelines. ${formData.additionalNotes ? "Frequency details: " + formData.additionalNotes : "Medical necessity documentation required for additional units"}`;
+      specificComment = `Service frequency exceeds guidelines. Medical necessity required for additional units`;
       break;
     case "PR-1":
-      specificComment = `Patient deductible responsibility confirmed. ${formData.eligibilityStatus === "active" ? "Annual deductible not yet met" : "Coverage status pending verification"}`;
+      specificComment = `Patient deductible responsibility. Annual deductible not met`;
       break;
     case "PR-2":
-      specificComment = `Patient coinsurance responsibility per plan benefits. ${formData.eligibilityStatus === "active" ? "Standard coinsurance rate applies" : "Benefit verification required"}`;
+      specificComment = `Patient coinsurance responsibility per plan benefits`;
       break;
     case "PR-3":
-      specificComment = `Patient copayment responsibility confirmed per plan requirements. Standard copay amount applies to service`;
+      specificComment = `Patient copay responsibility confirmed`;
       break;
     default:
-      specificComment = `Denial reason documented per payer representative guidance. ${formData.additionalNotes ? "Additional notes: " + formData.additionalNotes : "Follow-up action required"}`;
+      specificComment = `Denial documented per rep guidance`;
   }
   
-  const baseComment = `Spoke with ${repName} from ${insuranceName} regarding account ${accountNumber} (${patientName}) - denial code ${denialCode} for DOS ${dos}.`;
-  
-  return `${baseComment} ${specificComment} Call reference #${callReference}. ${new Date().toLocaleDateString('en-US')} ${new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })}.`;
+  return `Spoke with ${repName} from ${insuranceName} - ${denialCode}: ${specificComment}. Call ref #${callReference}`;
 }
 
 function getInsuranceLabel(value: string): string {

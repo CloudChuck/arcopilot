@@ -99,5 +99,30 @@ Preferred communication style: Simple, everyday language.
 - **Intelligent Suggestions**: Context-aware guidance based on denial codes
 - **Responsive Design**: Mobile-first approach with adaptive layouts
 - **Type Safety**: Full TypeScript coverage from database to frontend
+- **CSV Export**: Complete session data export with generated comments
+- **New Call Functionality**: Easy session reset for new calls
+- **Optimized Workflow**: Generate comment button positioned at form bottom
+
+## Recent Changes (July 2025)
+
+### Comment Generation Improvements
+- Simplified comment format to be short and crisp for RCM systems
+- Removed unnecessary timestamps and redundant information
+- Enhanced professional language for healthcare context
+
+### User Experience Enhancements
+- Moved "Generate Comment" button to bottom of form for better workflow
+- Added "New Call" button in header for quick session reset
+- Improved CSV export to include generated comments as final column
+
+### Denial Code Expansion
+- Expanded from 5 to 15 denial codes covering common RCM scenarios
+- Added comprehensive question sets and guidance for each code
+- Enhanced AI suggestions for more accurate processing
+
+### Export Functionality
+- Changed from JSON to CSV format for better data analysis
+- Included session metadata and account timestamps
+- Added generated comments as exportable data column
 
 The application is designed to be deployed on platforms that support Node.js applications with PostgreSQL databases, with Replit-specific configurations for development environment integration.

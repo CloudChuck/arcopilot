@@ -233,26 +233,44 @@ export default function ARCopilot() {
       'Eligibility From Date',
       'Eligibility Status',
       'Additional Notes',
+      'Generated Comment',
       'Created At',
       'Updated At'
     ];
     
     // Convert accounts to CSV rows
-    const csvRows = accounts.map(account => [
-      account.patientName || '',
-      account.accountNumber || '',
-      getInsuranceLabel(account.insuranceName) || account.insuranceName || '',
-      account.repName || '',
-      account.callReference || '',
-      account.denialCode || '',
-      account.denialDescription || '',
-      account.dateOfService || '',
-      account.eligibilityFromDate || '',
-      account.eligibilityStatus || '',
-      account.additionalNotes || '',
-      account.createdAt ? new Date(account.createdAt).toLocaleString() : '',
-      account.updatedAt ? new Date(account.updatedAt).toLocaleString() : ''
-    ]);
+    const csvRows = accounts.map(account => {
+      // Generate comment for each account
+      const comment = generateRCMComment({
+        patientName: account.patientName,
+        accountNumber: account.accountNumber,
+        insuranceName: account.insuranceName,
+        repName: account.repName,
+        callReference: account.callReference,
+        denialCode: account.denialCode,
+        dateOfService: account.dateOfService,
+        eligibilityFromDate: account.eligibilityFromDate,
+        eligibilityStatus: account.eligibilityStatus,
+        additionalNotes: account.additionalNotes
+      });
+
+      return [
+        account.patientName || '',
+        account.accountNumber || '',
+        getInsuranceLabel(account.insuranceName) || account.insuranceName || '',
+        account.repName || '',
+        account.callReference || '',
+        account.denialCode || '',
+        account.denialDescription || '',
+        account.dateOfService || '',
+        account.eligibilityFromDate || '',
+        account.eligibilityStatus || '',
+        account.additionalNotes || '',
+        comment || '',
+        account.createdAt ? new Date(account.createdAt).toLocaleString() : '',
+        account.updatedAt ? new Date(account.updatedAt).toLocaleString() : ''
+      ];
+    });
     
     // Create CSV content
     const csvContent = [
@@ -318,6 +336,9 @@ export default function ARCopilot() {
                 hour12: true 
               })}
             </div>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              New Call
+            </Button>
             <Button variant="outline" onClick={exportSession}>
               <Download className="mr-2" size={16} />
               Export Session
@@ -422,10 +443,6 @@ export default function ARCopilot() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button onClick={generateComment} className="bg-secondary hover:bg-green-700">
-                      <Bot className="mr-2" size={16} />
-                      Generate Comment
-                    </Button>
                   </div>
                 </div>
 
@@ -692,6 +709,14 @@ export default function ARCopilot() {
                         />
                       </CardContent>
                     </Card>
+
+                    {/* Generate Comment Section */}
+                    <div className="flex justify-center pt-6">
+                      <Button onClick={generateComment} size="lg" className="bg-secondary hover:bg-green-700">
+                        <Bot className="mr-2" size={18} />
+                        Generate RCM Comment
+                      </Button>
+                    </div>
 
                     {/* Generated Comment Section */}
                     {generatedComment && (
