@@ -270,6 +270,74 @@ export const eligibilityStatusOptions = [
   { value: "unknown", label: "Unknown" }
 ];
 
+// Helper function to clean and improve additional notes
+function improveAdditionalNotes(notes: string): string {
+  if (!notes || notes.trim().length === 0) return "";
+  
+  // Common abbreviations and improvements
+  const improvements = {
+    'dup': 'duplicate',
+    'prev': 'previous',
+    'claiim': 'claim',
+    'suibmit': 'submitted',
+    'submited': 'submitted',
+    'recieved': 'received',
+    'payed': 'paid',
+    'approvel': 'approval',
+    'authorizaton': 'authorization',
+    'necesary': 'necessary',
+    'seperately': 'separately',
+    'seperete': 'separate',
+    'w/': 'with',
+    'pt': 'patient',
+    'dx': 'diagnosis',
+    'proc': 'procedure',
+    'auth': 'authorization',
+    'pre-auth': 'pre-authorization',
+    'reimb': 'reimbursement',
+    'coord': 'coordination',
+    'benefts': 'benefits',
+    'eligibilty': 'eligibility'
+  };
+  
+  let improved = notes.toLowerCase().trim();
+  
+  // Apply word improvements
+  Object.entries(improvements).forEach(([wrong, correct]) => {
+    const regex = new RegExp(`\\b${wrong}\\b`, 'gi');
+    improved = improved.replace(regex, correct);
+  });
+  
+  // Fix common patterns
+  improved = improved
+    .replace(/\bno\s+void\s+any\s+claim\b/gi, 'do not void any claims')
+    .replace(/\byes\s+true\s+duplicate\b/gi, 'confirmed true duplicate')
+    .replace(/\bother\s+claim\s*#\s*(\d+)/gi, 'other claim #$1')
+    .replace(/\bsubmit\s+on\s+(\d{8})/gi, (match, date) => {
+      // Convert DDMMYYYY to MM/DD/YYYY
+      if (date.length === 8) {
+        const day = date.substring(0, 2);
+        const month = date.substring(2, 4);
+        const year = date.substring(4, 8);
+        return `submitted on ${month}/${day}/${year}`;
+      }
+      return match;
+    })
+    .replace(/\bpaid\s+out\b/gi, 'paid in full')
+    .replace(/\s+/g, ' ') // Clean multiple spaces
+    .trim();
+  
+  // Capitalize first letter
+  improved = improved.charAt(0).toUpperCase() + improved.slice(1);
+  
+  // Ensure it ends with proper punctuation
+  if (!improved.match(/[.!?]$/)) {
+    improved += '.';
+  }
+  
+  return improved;
+}
+
 export function generateRCMComment(formData: any): string {
   const repName = formData.repName || "[Rep Name]";
   const insuranceName = getInsuranceLabel(formData.insuranceName) || "[Insurance]";
@@ -328,7 +396,11 @@ export function generateRCMComment(formData: any): string {
       specificComment = `Denial documented per rep guidance`;
   }
   
-  return `Spoke with ${repName} from ${insuranceName} - ${denialCode}: ${specificComment}. Call ref #${callReference}`;
+  // Add improved additional notes if available
+  const improvedNotes = improveAdditionalNotes(formData.additionalNotes);
+  const additionalInfo = improvedNotes ? ` Additional notes: ${improvedNotes}` : "";
+  
+  return `Spoke with ${repName} from ${insuranceName} - ${denialCode}: ${specificComment}.${additionalInfo} Call ref #${callReference}`;
 }
 
 function getInsuranceLabel(value: string): string {

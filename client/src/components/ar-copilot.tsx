@@ -13,11 +13,13 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { PatientAccount, InsertPatientAccount, UpdatePatientAccount } from "@shared/schema";
 import { denialCodeMappings, insuranceOptions, eligibilityStatusOptions, generateRCMComment } from "@/lib/denial-codes";
-import { Plus, X, Stethoscope, Download, Copy, CheckCircle, AlertCircle, ArrowRight, Book, ExternalLink, Bot } from "lucide-react";
+import { Plus, X, Stethoscope, Download, Copy, CheckCircle, AlertCircle, ArrowRight, Book, ExternalLink, Bot, ChevronsUpDown, Check } from "lucide-react";
 
 const formSchema = z.object({
   patientName: z.string().min(1, "Patient name is required"),
@@ -35,10 +37,47 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+// Session storage helper functions
+const SESSION_STORAGE_KEY = 'ar-copilot-session';
+const ACCOUNTS_STORAGE_KEY = 'ar-copilot-accounts';
+
+const saveToSessionStorage = (key: string, data: any) => {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.warn('Failed to save to sessionStorage:', error);
+  }
+};
+
+const loadFromSessionStorage = (key: string) => {
+  try {
+    const data = sessionStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+  } catch (error) {
+    console.warn('Failed to load from sessionStorage:', error);
+    return null;
+  }
+};
+
+const clearSessionStorage = () => {
+  try {
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    sessionStorage.removeItem(ACCOUNTS_STORAGE_KEY);
+  } catch (error) {
+    console.warn('Failed to clear sessionStorage:', error);
+  }
+};
+
 export default function ARCopilot() {
-  const [sessionId] = useState(() => `session-${Date.now()}`);
+  const [sessionId] = useState(() => {
+    const saved = loadFromSessionStorage(SESSION_STORAGE_KEY);
+    return saved || `session-${Date.now()}`;
+  });
   const [activeTabId, setActiveTabId] = useState<number | null>(null);
   const [generatedComment, setGeneratedComment] = useState("");
+  const [persistedAccounts, setPersistedAccounts] = useState<PatientAccount[]>(() => 
+    loadFromSessionStorage(ACCOUNTS_STORAGE_KEY) || []
+  );
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -59,10 +98,23 @@ export default function ARCopilot() {
     },
   });
 
-  // Query to fetch patient accounts for current session
-  const { data: accounts = [], isLoading } = useQuery<PatientAccount[]>({
+  // Use persistent accounts or fallback to API query
+  const { data: serverAccounts = [], isLoading } = useQuery<PatientAccount[]>({
     queryKey: ["/api/accounts", sessionId],
+    enabled: persistedAccounts.length === 0, // Only fetch if no persisted data
   });
+
+  // Use persisted accounts or server accounts
+  const accounts = persistedAccounts.length > 0 ? persistedAccounts : serverAccounts;
+
+  // Save session data whenever it changes
+  useEffect(() => {
+    saveToSessionStorage(SESSION_STORAGE_KEY, sessionId);
+    if (accounts.length > 0) {
+      saveToSessionStorage(ACCOUNTS_STORAGE_KEY, accounts);
+      setPersistedAccounts(accounts);
+    }
+  }, [sessionId, accounts]);
 
   // Mutation to create new patient account
   const createAccountMutation = useMutation({
@@ -336,7 +388,10 @@ export default function ARCopilot() {
                 hour12: true 
               })}
             </div>
-            <Button variant="outline" onClick={() => window.location.reload()}>
+            <Button variant="outline" onClick={() => {
+              clearSessionStorage();
+              window.location.reload();
+            }}>
               New Call
             </Button>
             <Button variant="outline" onClick={exportSession}>
@@ -589,25 +644,58 @@ export default function ARCopilot() {
                           control={form.control}
                           name="denialCode"
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="flex flex-col">
                               <FormLabel>Denial Code *</FormLabel>
-                              <Select value={field.value} onValueChange={(value) => {
-                                field.onChange(value);
-                                handleDenialCodeChange(value);
-                              }}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select denial code" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {Object.values(denialCodeMappings).map((mapping) => (
-                                    <SelectItem key={mapping.code} value={mapping.code}>
-                                      {mapping.code} - {mapping.description}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant="outline"
+                                      role="combobox"
+                                      className="w-full justify-between"
+                                    >
+                                      {field.value
+                                        ? `${field.value} - ${denialCodeMappings[field.value]?.description || ""}`
+                                        : "Search denial codes..."}
+                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[400px] p-0">
+                                  <Command>
+                                    <CommandInput placeholder="Type code or description (e.g., CO-97, bundle, duplicate)..." />
+                                    <CommandEmpty>No denial code found.</CommandEmpty>
+                                    <CommandList>
+                                      <CommandGroup>
+                                        {Object.values(denialCodeMappings).map((mapping) => (
+                                          <CommandItem
+                                            value={`${mapping.code} ${mapping.description}`}
+                                            key={mapping.code}
+                                            onSelect={() => {
+                                              field.onChange(mapping.code);
+                                              handleDenialCodeChange(mapping.code);
+                                            }}
+                                          >
+                                            <Check
+                                              className={`mr-2 h-4 w-4 ${
+                                                mapping.code === field.value
+                                                  ? "opacity-100"
+                                                  : "opacity-0"
+                                              }`}
+                                            />
+                                            <div className="flex flex-col">
+                                              <span className="font-medium">{mapping.code}</span>
+                                              <span className="text-sm text-muted-foreground">
+                                                {mapping.description}
+                                              </span>
+                                            </div>
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </CommandList>
+                                  </Command>
+                                </PopoverContent>
+                              </Popover>
                             </FormItem>
                           )}
                         />
@@ -869,17 +957,50 @@ export default function ARCopilot() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      <a href="#" className="block text-sm text-primary hover:text-primary-dark transition-colors">
+                      <a 
+                        href={`https://www.google.com/search?q="${currentDenialMapping.code}"+denial+code+healthcare+RCM`}
+                        target="_blank"
+                        rel="noopener noreferrer" 
+                        className="block text-sm text-primary hover:text-primary-dark transition-colors"
+                      >
                         <ExternalLink className="mr-1 inline" size={12} />
                         {currentDenialMapping.code} Denial Code Reference
                       </a>
-                      <a href="#" className="block text-sm text-primary hover:text-primary-dark transition-colors">
+                      <a 
+                        href="https://www.cms.gov/medicare/coordination-benefits-recovery/overview"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-sm text-primary hover:text-primary-dark transition-colors"
+                      >
                         <ExternalLink className="mr-1 inline" size={12} />
                         Eligibility Verification Guide
                       </a>
-                      <a href="#" className="block text-sm text-primary hover:text-primary-dark transition-colors">
+                      <a 
+                        href="https://www.cms.gov/medicare/medicare-coverage"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-sm text-primary hover:text-primary-dark transition-colors"
+                      >
                         <ExternalLink className="mr-1 inline" size={12} />
                         Insurance Coverage Policies
+                      </a>
+                      <a 
+                        href="https://www.aapc.com/medical-coding/denial-codes.aspx"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-sm text-primary hover:text-primary-dark transition-colors"
+                      >
+                        <ExternalLink className="mr-1 inline" size={12} />
+                        Complete Denial Code Database
+                      </a>
+                      <a 
+                        href="https://www.nucc.org/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-sm text-primary hover:text-primary-dark transition-colors"
+                      >
+                        <ExternalLink className="mr-1 inline" size={12} />
+                        Provider Taxonomy Codes
                       </a>
                     </div>
                   </CardContent>
