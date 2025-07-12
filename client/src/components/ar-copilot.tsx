@@ -214,24 +214,81 @@ export default function ARCopilot() {
     }
   };
 
+  const getInsuranceLabel = (value: string): string => {
+    const option = insuranceOptions.find(opt => opt.value === value);
+    return option ? option.label : value;
+  };
+
   const exportSession = () => {
-    const sessionData = {
-      timestamp: new Date().toISOString(),
-      sessionId,
-      accounts,
-    };
-    const dataStr = JSON.stringify(sessionData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    // Create CSV headers
+    const headers = [
+      'Patient Name',
+      'Account Number', 
+      'Insurance Name',
+      'Rep Name',
+      'Call Reference',
+      'Denial Code',
+      'Denial Description',
+      'Date of Service',
+      'Eligibility From Date',
+      'Eligibility Status',
+      'Additional Notes',
+      'Created At',
+      'Updated At'
+    ];
+    
+    // Convert accounts to CSV rows
+    const csvRows = accounts.map(account => [
+      account.patientName || '',
+      account.accountNumber || '',
+      getInsuranceLabel(account.insuranceName) || account.insuranceName || '',
+      account.repName || '',
+      account.callReference || '',
+      account.denialCode || '',
+      account.denialDescription || '',
+      account.dateOfService || '',
+      account.eligibilityFromDate || '',
+      account.eligibilityStatus || '',
+      account.additionalNotes || '',
+      account.createdAt ? new Date(account.createdAt).toLocaleString() : '',
+      account.updatedAt ? new Date(account.updatedAt).toLocaleString() : ''
+    ]);
+    
+    // Create CSV content
+    const csvContent = [
+      // Add session info as header comments
+      `# AR Copilot Session Export`,
+      `# Session ID: ${sessionId}`,
+      `# Export Date: ${new Date().toLocaleString()}`,
+      `# Total Accounts: ${accounts.length}`,
+      '',
+      // Add headers
+      headers.join(','),
+      // Add data rows
+      ...csvRows.map(row => 
+        row.map(field => 
+          // Escape fields that contain commas, quotes, or newlines
+          typeof field === 'string' && (field.includes(',') || field.includes('"') || field.includes('\n'))
+            ? `"${field.replace(/"/g, '""')}"` 
+            : field
+        ).join(',')
+      )
+    ].join('\n');
+    
+    // Create and download CSV file
+    const dataBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `ar-session-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `ar-session-${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast({ title: "Session Exported", description: "Session data has been downloaded" });
+    toast({ title: "Session Exported", description: "CSV file has been downloaded with all account data" });
   };
+
+
 
   const currentDenialMapping = form.watch("denialCode") ? denialCodeMappings[form.watch("denialCode")] : null;
 
