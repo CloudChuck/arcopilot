@@ -124,13 +124,19 @@ Preferred communication style: Simple, everyday language.
 ### Date Format Implementation (July 14, 2025)
 - Changed DOS (Date of Service) input to MM/DD/YYYY format with auto-formatting
 - Added real-time validation for MM/DD/YYYY format on both DOS and Eligibility dates
-- Removed HTML5 date picker in favor of formatted text input for consistency
+- Added calendar popup buttons to both DOS and Eligibility date fields for easy date selection
+- Maintains both manual entry with auto-formatting and visual calendar picker
 
 ### Insurance Selection Enhancement (July 14, 2025)
 - Converted insurance dropdown to searchable combobox interface
 - Added 10 new insurance options including Medicare, Medicaid, TRICARE, Oscar Health
 - Insurance options now sorted alphabetically (A-Z) for improved usability
 - Searchable interface allows typing to filter insurance options
+
+### Copy From Tab Enhancement (July 14, 2025)
+- Auto-copy functionality for rep name and call reference when adding new patient
+- When clicking "+ Add Patient", rep name and call reference automatically copy from previous patient
+- Streamlines workflow for calls handling multiple patients with same insurance representative
 
 ### Export Functionality
 - Changed from JSON to CSV format for better data analysis

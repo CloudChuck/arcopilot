@@ -15,11 +15,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { PatientAccount, InsertPatientAccount, UpdatePatientAccount } from "@shared/schema";
 import { denialCodeMappings, insuranceOptions, eligibilityStatusOptions, generateRCMComment } from "@/lib/denial-codes";
-import { Plus, X, Stethoscope, Download, Copy, CheckCircle, AlertCircle, ArrowRight, Book, ExternalLink, Bot, ChevronsUpDown, Check } from "lucide-react";
+import { Plus, X, Stethoscope, Download, Copy, CheckCircle, AlertCircle, ArrowRight, Book, ExternalLink, Bot, ChevronsUpDown, Check, Calendar } from "lucide-react";
 
 const formSchema = z.object({
   patientName: z.string().min(1, "Patient name is required"),
@@ -220,10 +221,17 @@ export default function ARCopilot() {
   }, [accounts, activeTabId]);
 
   const addNewTab = () => {
+    // Get current form data to copy rep name and call reference
+    const currentFormData = form.getValues();
+    const repNameToCopy = currentFormData.repName || "";
+    const callRefToCopy = currentFormData.callReference || "";
+    
     const newAccountData: InsertPatientAccount = {
       patientName: "New Patient",
       accountNumber: `ACC-${new Date().getFullYear()}-${String(accounts.length + 1).padStart(3, '0')}`,
       insuranceName: "",
+      repName: repNameToCopy, // Auto-copy from current patient
+      callReference: callRefToCopy, // Auto-copy from current patient
       sessionId,
     };
     createAccountMutation.mutate(newAccountData);
@@ -581,26 +589,60 @@ export default function ARCopilot() {
                             <FormItem>
                               <FormLabel>Date of Service (DOS) *</FormLabel>
                               <FormControl>
-                                <Input 
-                                  placeholder="MM/DD/YYYY" 
-                                  {...field} 
-                                  onChange={(e) => {
-                                    let value = e.target.value;
-                                    // Auto-format MM/DD/YYYY
-                                    value = value.replace(/\D/g, ''); // Remove non-digits
-                                    if (value.length >= 3) {
-                                      value = value.slice(0, 2) + '/' + value.slice(2);
-                                    }
-                                    if (value.length >= 6) {
-                                      value = value.slice(0, 5) + '/' + value.slice(5, 9);
-                                    }
-                                    field.onChange(value);
-                                    if (activeTabId && value.length === 10) {
-                                      updateAccountMutation.mutate({ id: activeTabId, data: { dateOfService: value } });
-                                    }
-                                  }}
-                                  maxLength={10}
-                                />
+                                <div className="relative">
+                                  <Input 
+                                    placeholder="MM/DD/YYYY" 
+                                    {...field} 
+                                    onChange={(e) => {
+                                      let value = e.target.value;
+                                      // Auto-format MM/DD/YYYY
+                                      value = value.replace(/\D/g, ''); // Remove non-digits
+                                      if (value.length >= 3) {
+                                        value = value.slice(0, 2) + '/' + value.slice(2);
+                                      }
+                                      if (value.length >= 6) {
+                                        value = value.slice(0, 5) + '/' + value.slice(5, 9);
+                                      }
+                                      field.onChange(value);
+                                      if (activeTabId && value.length === 10) {
+                                        updateAccountMutation.mutate({ id: activeTabId, data: { dateOfService: value } });
+                                      }
+                                    }}
+                                    maxLength={10}
+                                    className="pr-10"
+                                  />
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-accent"
+                                        type="button"
+                                      >
+                                        <Calendar className="h-4 w-4" />
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                      <CalendarComponent
+                                        mode="single"
+                                        selected={field.value ? new Date(field.value) : undefined}
+                                        onSelect={(date) => {
+                                          if (date) {
+                                            const formattedDate = `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}/${date.getFullYear()}`;
+                                            field.onChange(formattedDate);
+                                            if (activeTabId) {
+                                              updateAccountMutation.mutate({ id: activeTabId, data: { dateOfService: formattedDate } });
+                                            }
+                                          }
+                                        }}
+                                        disabled={(date) =>
+                                          date > new Date() || date < new Date("1900-01-01")
+                                        }
+                                        initialFocus
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
+                                </div>
                               </FormControl>
                             </FormItem>
                           )}
@@ -828,26 +870,60 @@ export default function ARCopilot() {
                             <FormItem>
                               <FormLabel>Eligibility From Date *</FormLabel>
                               <FormControl>
-                                <Input 
-                                  placeholder="MM/DD/YYYY" 
-                                  {...field} 
-                                  onChange={(e) => {
-                                    let value = e.target.value;
-                                    // Auto-format MM/DD/YYYY
-                                    value = value.replace(/\D/g, ''); // Remove non-digits
-                                    if (value.length >= 3) {
-                                      value = value.slice(0, 2) + '/' + value.slice(2);
-                                    }
-                                    if (value.length >= 6) {
-                                      value = value.slice(0, 5) + '/' + value.slice(5, 9);
-                                    }
-                                    field.onChange(value);
-                                    if (activeTabId && value.length === 10) {
-                                      updateAccountMutation.mutate({ id: activeTabId, data: { eligibilityFromDate: value } });
-                                    }
-                                  }}
-                                  maxLength={10}
-                                />
+                                <div className="relative">
+                                  <Input 
+                                    placeholder="MM/DD/YYYY" 
+                                    {...field} 
+                                    onChange={(e) => {
+                                      let value = e.target.value;
+                                      // Auto-format MM/DD/YYYY
+                                      value = value.replace(/\D/g, ''); // Remove non-digits
+                                      if (value.length >= 3) {
+                                        value = value.slice(0, 2) + '/' + value.slice(2);
+                                      }
+                                      if (value.length >= 6) {
+                                        value = value.slice(0, 5) + '/' + value.slice(5, 9);
+                                      }
+                                      field.onChange(value);
+                                      if (activeTabId && value.length === 10) {
+                                        updateAccountMutation.mutate({ id: activeTabId, data: { eligibilityFromDate: value } });
+                                      }
+                                    }}
+                                    maxLength={10}
+                                    className="pr-10"
+                                  />
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-accent"
+                                        type="button"
+                                      >
+                                        <Calendar className="h-4 w-4" />
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                      <CalendarComponent
+                                        mode="single"
+                                        selected={field.value ? new Date(field.value) : undefined}
+                                        onSelect={(date) => {
+                                          if (date) {
+                                            const formattedDate = `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}/${date.getFullYear()}`;
+                                            field.onChange(formattedDate);
+                                            if (activeTabId) {
+                                              updateAccountMutation.mutate({ id: activeTabId, data: { eligibilityFromDate: formattedDate } });
+                                            }
+                                          }
+                                        }}
+                                        disabled={(date) =>
+                                          date > new Date() || date < new Date("1900-01-01")
+                                        }
+                                        initialFocus
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
+                                </div>
                               </FormControl>
                             </FormItem>
                           )}
