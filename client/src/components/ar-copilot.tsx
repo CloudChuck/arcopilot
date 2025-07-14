@@ -754,28 +754,29 @@ export default function ARCopilot() {
                       <CardHeader>
                         <CardTitle>Denial Information</CardTitle>
                       </CardHeader>
-                      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="denialCode"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                              <FormLabel>Denial Code *</FormLabel>
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      variant="outline"
-                                      role="combobox"
-                                      className="w-full justify-between"
-                                    >
-                                      {field.value
-                                        ? `${field.value} - ${denialCodeMappings[field.value]?.description || ""}`
-                                        : "Search denial codes..."}
-                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="denialCode"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-col">
+                                <FormLabel>Denial Code *</FormLabel>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <FormControl>
+                                      <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        className="w-full justify-between text-left"
+                                      >
+                                        {field.value
+                                          ? field.value
+                                          : "Search denial codes..."}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                      </Button>
+                                    </FormControl>
+                                  </PopoverTrigger>
                                 <PopoverContent className="w-[400px] p-0">
                                   <Command>
                                     <CommandInput placeholder="Type code or description (e.g., CO-97, bundle, duplicate)..." />
@@ -814,6 +815,7 @@ export default function ARCopilot() {
                             </FormItem>
                           )}
                         />
+                        </div>
                         <FormField
                           control={form.control}
                           name="denialDescription"
@@ -821,7 +823,12 @@ export default function ARCopilot() {
                             <FormItem>
                               <FormLabel>Denial Description</FormLabel>
                               <FormControl>
-                                <Input {...field} readOnly className="bg-neutral-100 text-neutral-600" />
+                                <Textarea 
+                                  {...field} 
+                                  readOnly 
+                                  className="bg-neutral-100 text-neutral-600 min-h-[80px] resize-none" 
+                                  placeholder="Description will appear here when denial code is selected..."
+                                />
                               </FormControl>
                             </FormItem>
                           )}
