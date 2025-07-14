@@ -220,7 +220,10 @@ export default function ARCopilot() {
     }
   }, [accounts, activeTabId]);
 
-  const addNewTab = () => {
+  const addNewTab = async () => {
+    // Save current form data before adding new tab
+    await saveCurrentFormData();
+    
     // Get current form data to copy rep name and call reference
     const currentFormData = form.getValues();
     const repNameToCopy = currentFormData.repName || "";
@@ -245,13 +248,19 @@ export default function ARCopilot() {
     }
   };
 
-  const switchTab = (accountId: number) => {
+  const switchTab = async (accountId: number) => {
     if (activeTabId && activeTabId !== accountId) {
       // Save current form data before switching
-      const formData = form.getValues();
-      updateAccountMutation.mutate({ id: activeTabId, data: formData });
+      await saveCurrentFormData();
     }
     setActiveTabId(accountId);
+  };
+
+  const saveCurrentFormData = async () => {
+    if (activeTabId) {
+      const formData = form.getValues();
+      await updateAccountMutation.mutateAsync({ id: activeTabId, data: formData });
+    }
   };
 
   const onSubmit = (data: FormData) => {

@@ -137,6 +137,13 @@ Preferred communication style: Simple, everyday language.
 - Auto-copy functionality for rep name and call reference when adding new patient
 - When clicking "+ Add Patient", rep name and call reference automatically copy from previous patient
 - Streamlines workflow for calls handling multiple patients with same insurance representative
+- Fixed data preservation issue where rep name and call reference were being cleared from first patient when adding new patient
+
+### UI Layout Improvements (July 14, 2025)
+- Fixed denial code column overlap issue in denial information section
+- Denial code dropdown now shows only the code to prevent text overflow
+- Moved denial description to full-width textarea below denial code for better readability
+- Improved spacing and layout structure to prevent column overlap
 
 ### Export Functionality
 - Changed from JSON to CSV format for better data analysis
