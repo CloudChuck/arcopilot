@@ -7,68 +7,68 @@ export interface DenialCodeMapping {
 }
 
 export const denialCodeMappings: Record<string, DenialCodeMapping> = {
-  "CO-27": {
-    code: "CO-27",
-    description: "Expenses incurred after coverage terminated",
+  "CO-4": {
+    code: "CO-4",
+    description: "The procedure code is inconsistent with the modifier used or a required modifier is missing",
     questions: [
-      "What was the patient's eligibility status on the date of service?",
-      "Was the plan active on the date of service?",
-      "What is the effective and termination date of coverage?",
-      "Is there any possibility of retroactive coverage?"
-    ],
-    requiredFields: ["eligibilityStatus", "eligibilityFromDate", "dateOfService", "repName"],
-    nextSteps: [
-      "Document termination date in patient record",
-      "Generate final comment for RCM system",
-      "Mark account for patient notification"
-    ]
-  },
-  "CO-97": {
-    code: "CO-97",
-    description: "The benefit for this service is included in the payment/allowance for another service/procedure",
-    questions: [
-      "Which primary service was this bundled with?",
-      "Was the bundled service paid correctly?",
-      "Is there documentation showing separate services?",
-      "What is the bundling policy for this procedure?"
+      "Which modifier was used or is missing?",
+      "Is the procedure code correct for the service provided?",
+      "What documentation supports the modifier usage?",
+      "Does the modifier match the diagnosis?"
     ],
     requiredFields: ["dateOfService", "repName", "additionalNotes"],
     nextSteps: [
-      "Review bundling documentation",
-      "Verify primary service payment status",
-      "Document bundling rationale"
+      "Review modifier requirements",
+      "Verify procedure code accuracy",
+      "Prepare corrected claim for resubmission"
     ]
   },
-  "PR-204": {
-    code: "PR-204",
-    description: "This service/equipment/drug is not covered under the patient's current benefit plan",
+  "CO-6": {
+    code: "CO-6",
+    description: "The procedure/revenue code is inconsistent with the patient's age",
     questions: [
-      "Is prior authorization required for this service?",
-      "What is the patient's current benefit plan?",
-      "Are there any covered alternatives?",
-      "Is this service excluded from the plan?"
-    ],
-    requiredFields: ["eligibilityStatus", "dateOfService", "repName", "additionalNotes"],
-    nextSteps: [
-      "Review benefit plan documentation",
-      "Check for prior authorization requirements",
-      "Notify patient of coverage limitations"
-    ]
-  },
-  "CO-50": {
-    code: "CO-50",
-    description: "These are non-covered services because this is not deemed a 'medical necessity'",
-    questions: [
-      "What criteria was used to determine medical necessity?",
-      "Is there additional documentation that supports necessity?",
-      "Was a peer-to-peer review conducted?",
-      "Are there appeal options available?"
+      "What is the patient's age?",
+      "Is the procedure code age-appropriate?",
+      "Are there alternative procedure codes for this age group?",
+      "Is there documentation supporting the service for this age?"
     ],
     requiredFields: ["dateOfService", "repName", "additionalNotes"],
     nextSteps: [
-      "Gather additional medical documentation",
-      "Consider peer-to-peer review",
-      "Prepare appeal if warranted"
+      "Verify patient age in records",
+      "Review age-appropriate procedure codes",
+      "Submit corrected claim if necessary"
+    ]
+  },
+  "CO-11": {
+    code: "CO-11",
+    description: "The diagnosis is inconsistent with the procedure",
+    questions: [
+      "What diagnosis codes were submitted?",
+      "Do the diagnosis codes support the procedure?",
+      "Is there a more appropriate diagnosis code?",
+      "Is additional documentation needed to support the procedure?"
+    ],
+    requiredFields: ["dateOfService", "repName", "additionalNotes"],
+    nextSteps: [
+      "Review diagnosis and procedure code relationship",
+      "Gather supporting medical documentation",
+      "Consider alternative diagnosis codes"
+    ]
+  },
+  "CO-15": {
+    code: "CO-15",
+    description: "The authorization number is missing, invalid, or does not apply to the billed services or provider",
+    questions: [
+      "Was prior authorization obtained?",
+      "What is the authorization number and expiration date?",
+      "Does the authorization cover the specific service?",
+      "Is the authorization for the correct provider?"
+    ],
+    requiredFields: ["dateOfService", "repName", "additionalNotes"],
+    nextSteps: [
+      "Verify authorization requirements",
+      "Obtain valid authorization if needed",
+      "Resubmit with correct authorization number"
     ]
   },
   "CO-16": {
@@ -119,6 +119,38 @@ export const denialCodeMappings: Record<string, DenialCodeMapping> = {
       "Update billing sequence"
     ]
   },
+  "CO-23": {
+    code: "CO-23",
+    description: "The impact of prior payer(s) adjudication including payments and/or adjustments",
+    questions: [
+      "What was the primary payer's payment amount?",
+      "Were there any adjustments from the primary payer?",
+      "What is the remaining patient responsibility?",
+      "Should this be billed to secondary insurance?"
+    ],
+    requiredFields: ["dateOfService", "repName", "additionalNotes"],
+    nextSteps: [
+      "Review primary payer adjudication",
+      "Calculate remaining balance",
+      "Bill secondary payer if applicable"
+    ]
+  },
+  "CO-27": {
+    code: "CO-27",
+    description: "Expenses incurred after coverage terminated",
+    questions: [
+      "What was the patient's eligibility status on the date of service?",
+      "Was the plan active on the date of service?",
+      "What is the effective and termination date of coverage?",
+      "Is there any possibility of retroactive coverage?"
+    ],
+    requiredFields: ["eligibilityStatus", "eligibilityFromDate", "dateOfService", "repName"],
+    nextSteps: [
+      "Document termination date in patient record",
+      "Generate final comment for RCM system",
+      "Mark account for patient notification"
+    ]
+  },
   "CO-29": {
     code: "CO-29",
     description: "The time limit for filing has expired",
@@ -133,6 +165,22 @@ export const denialCodeMappings: Record<string, DenialCodeMapping> = {
       "Document filing timeline",
       "Check for appeal options",
       "Review timely filing policies"
+    ]
+  },
+  "CO-31": {
+    code: "CO-31",
+    description: "Patient cannot be identified as our insured",
+    questions: [
+      "Is the member ID number correct?",
+      "Has the patient's name changed recently?",
+      "Is the date of birth accurate?",
+      "Are there any aliases or alternate spellings?"
+    ],
+    requiredFields: ["dateOfService", "repName", "additionalNotes"],
+    nextSteps: [
+      "Verify patient demographics",
+      "Check for name changes or aliases",
+      "Obtain updated insurance information"
     ]
   },
   "CO-45": {
@@ -151,6 +199,22 @@ export const denialCodeMappings: Record<string, DenialCodeMapping> = {
       "Check contract terms"
     ]
   },
+  "CO-50": {
+    code: "CO-50",
+    description: "These are non-covered services because this is not deemed a 'medical necessity'",
+    questions: [
+      "What criteria was used to determine medical necessity?",
+      "Is there additional documentation that supports necessity?",
+      "Was a peer-to-peer review conducted?",
+      "Are there appeal options available?"
+    ],
+    requiredFields: ["dateOfService", "repName", "additionalNotes"],
+    nextSteps: [
+      "Gather additional medical documentation",
+      "Consider peer-to-peer review",
+      "Prepare appeal if warranted"
+    ]
+  },
   "CO-96": {
     code: "CO-96",
     description: "Non-covered charge(s). At least one Remark Code must be provided",
@@ -165,6 +229,22 @@ export const denialCodeMappings: Record<string, DenialCodeMapping> = {
       "Review remark codes",
       "Check plan benefits",
       "Explore alternatives"
+    ]
+  },
+  "CO-97": {
+    code: "CO-97",
+    description: "The benefit for this service is included in the payment/allowance for another service/procedure",
+    questions: [
+      "Which primary service was this bundled with?",
+      "Was the bundled service paid correctly?",
+      "Is there documentation showing separate services?",
+      "What is the bundling policy for this procedure?"
+    ],
+    requiredFields: ["dateOfService", "repName", "additionalNotes"],
+    nextSteps: [
+      "Review bundling documentation",
+      "Verify primary service payment status",
+      "Document bundling rationale"
     ]
   },
   "CO-109": {
@@ -197,6 +277,38 @@ export const denialCodeMappings: Record<string, DenialCodeMapping> = {
       "Review frequency guidelines",
       "Gather supporting documentation",
       "Consider appeal if warranted"
+    ]
+  },
+  "CO-167": {
+    code: "CO-167",
+    description: "This (these) diagnosis(es) is (are) not covered",
+    questions: [
+      "Which specific diagnosis codes were denied?",
+      "Are there alternative diagnosis codes that would be covered?",
+      "Is there additional documentation to support the diagnosis?",
+      "Does the plan have specific exclusions for this condition?"
+    ],
+    requiredFields: ["dateOfService", "repName", "additionalNotes"],
+    nextSteps: [
+      "Review covered diagnosis list",
+      "Consider alternative diagnosis codes",
+      "Gather supporting documentation"
+    ]
+  },
+  "CO-170": {
+    code: "CO-170",
+    description: "Payment is denied when performed/billed by this type of provider",
+    questions: [
+      "What type of provider performed the service?",
+      "Is the provider credentialed for this service?",
+      "Are there provider type restrictions for this procedure?",
+      "Can the service be performed by a different provider type?"
+    ],
+    requiredFields: ["dateOfService", "repName", "additionalNotes"],
+    nextSteps: [
+      "Verify provider credentials",
+      "Check service restrictions by provider type",
+      "Consider referral to appropriate provider"
     ]
   },
   "PR-1": {
@@ -246,21 +358,47 @@ export const denialCodeMappings: Record<string, DenialCodeMapping> = {
       "Check payment history",
       "Follow up on collections"
     ]
+  },
+  "PR-204": {
+    code: "PR-204",
+    description: "This service/equipment/drug is not covered under the patient's current benefit plan",
+    questions: [
+      "Is prior authorization required for this service?",
+      "What is the patient's current benefit plan?",
+      "Are there any covered alternatives?",
+      "Is this service excluded from the plan?"
+    ],
+    requiredFields: ["eligibilityStatus", "dateOfService", "repName", "additionalNotes"],
+    nextSteps: [
+      "Review benefit plan documentation",
+      "Check for prior authorization requirements",
+      "Notify patient of coverage limitations"
+    ]
   }
 };
 
 export const insuranceOptions = [
   { value: "aetna", label: "Aetna" },
-  { value: "uhc", label: "United Healthcare (UHC)" },
-  { value: "cigna", label: "Cigna" },
-  { value: "bcbs", label: "Blue Cross Blue Shield" },
-  { value: "humana", label: "Humana" },
+  { value: "amerigroup", label: "Amerigroup" },
   { value: "anthem", label: "Anthem" },
-  { value: "kaiser", label: "Kaiser Permanente" },
-  { value: "molina", label: "Molina Healthcare" },
+  { value: "bcbs", label: "Blue Cross Blue Shield" },
   { value: "centene", label: "Centene" },
+  { value: "cigna", label: "Cigna" },
+  { value: "coventry", label: "Coventry Health Care" },
+  { value: "elevance", label: "Elevance Health" },
+  { value: "healthnet", label: "Health Net" },
+  { value: "humana", label: "Humana" },
+  { value: "independence", label: "Independence Blue Cross" },
+  { value: "kaiser", label: "Kaiser Permanente" },
+  { value: "medicaid", label: "Medicaid" },
+  { value: "medicare", label: "Medicare" },
+  { value: "molina", label: "Molina Healthcare" },
+  { value: "oscar", label: "Oscar Health" },
+  { value: "tricare", label: "TRICARE" },
+  { value: "uhc", label: "United Healthcare (UHC)" },
+  { value: "wellcare", label: "WellCare" },
   { value: "other", label: "Other" }
-];
+].sort((a, b) => a.label.localeCompare(b.label));
 
 export const eligibilityStatusOptions = [
   { value: "active", label: "Active" },
@@ -431,17 +569,17 @@ export function generateRCMComment(formData: any): string {
   let specificComment = "";
   
   switch (formData.denialCode) {
-    case "CO-27":
-      specificComment = `Eligibility ${formData.eligibilityStatus || "inactive"} as of ${formData.eligibilityFromDate || "[Date]"}. Coverage terminated prior to DOS. Patient responsibility confirmed`;
+    case "CO-4":
+      specificComment = `Modifier issue identified. Procedure code requires correct modifier for reimbursement`;
       break;
-    case "CO-97":
-      specificComment = `Service bundled with primary procedure per payer policy. No additional payment available`;
+    case "CO-6":
+      specificComment = `Age-related procedure code issue. Service not appropriate for patient age`;
       break;
-    case "PR-204":
-      specificComment = `Service not covered under current plan benefits. Plan exclusion confirmed`;
+    case "CO-11":
+      specificComment = `Diagnosis-procedure mismatch. Additional documentation required to support procedure`;
       break;
-    case "CO-50":
-      specificComment = `Medical necessity criteria not met per payer guidelines. Additional documentation required for appeal`;
+    case "CO-15":
+      specificComment = `Authorization missing or invalid. Valid authorization required for reimbursement`;
       break;
     case "CO-16":
       specificComment = `Missing/incorrect information identified. Correction and resubmission required`;
@@ -452,20 +590,41 @@ export function generateRCMComment(formData: any): string {
     case "CO-22":
       specificComment = `COB issue - other payer primary. Primary insurance must be billed first`;
       break;
+    case "CO-23":
+      specificComment = `Prior payer adjudication affects payment. Review primary payer payment details`;
+      break;
+    case "CO-27":
+      specificComment = `Eligibility ${formData.eligibilityStatus || "inactive"} as of ${formData.eligibilityFromDate || "[Date]"}. Coverage terminated prior to DOS. Patient responsibility confirmed`;
+      break;
     case "CO-29":
       specificComment = `Timely filing deadline exceeded. Claim submitted beyond payer deadline`;
+      break;
+    case "CO-31":
+      specificComment = `Patient identification issue. Member demographics require verification`;
       break;
     case "CO-45":
       specificComment = `Charge exceeds fee schedule. Payment adjusted to contracted rate`;
       break;
+    case "CO-50":
+      specificComment = `Medical necessity criteria not met per payer guidelines. Additional documentation required for appeal`;
+      break;
     case "CO-96":
       specificComment = `Non-covered service per plan benefits. Plan exclusion applies`;
+      break;
+    case "CO-97":
+      specificComment = `Service bundled with primary procedure per payer policy. No additional payment available`;
       break;
     case "CO-109":
       specificComment = `Wrong payer - claim must go to correct insurance carrier`;
       break;
     case "CO-151":
       specificComment = `Service frequency exceeds guidelines. Medical necessity required for additional units`;
+      break;
+    case "CO-167":
+      specificComment = `Diagnosis not covered per plan benefits. Review covered diagnosis list`;
+      break;
+    case "CO-170":
+      specificComment = `Provider type restriction. Service not covered when performed by this provider type`;
       break;
     case "PR-1":
       specificComment = `Patient deductible responsibility. Annual deductible not met`;
@@ -475,6 +634,9 @@ export function generateRCMComment(formData: any): string {
       break;
     case "PR-3":
       specificComment = `Patient copay responsibility confirmed`;
+      break;
+    case "PR-204":
+      specificComment = `Service not covered under current plan benefits. Plan exclusion confirmed`;
       break;
     default:
       specificComment = `Denial documented per rep guidance`;

@@ -116,9 +116,21 @@ Preferred communication style: Simple, everyday language.
 - Improved CSV export to include generated comments as final column
 
 ### Denial Code Expansion
-- Expanded from 5 to 15 denial codes covering common RCM scenarios
-- Added comprehensive question sets and guidance for each code
+- Expanded from 15 to 23 denial codes covering comprehensive RCM scenarios
+- Added new denial codes: CO-4, CO-6, CO-11, CO-15, CO-23, CO-31, CO-167, CO-170
+- All denial codes now sorted alphabetically for easier navigation
 - Enhanced AI suggestions for more accurate processing
+
+### Date Format Implementation (July 14, 2025)
+- Changed DOS (Date of Service) input to MM/DD/YYYY format with auto-formatting
+- Added real-time validation for MM/DD/YYYY format on both DOS and Eligibility dates
+- Removed HTML5 date picker in favor of formatted text input for consistency
+
+### Insurance Selection Enhancement (July 14, 2025)
+- Converted insurance dropdown to searchable combobox interface
+- Added 10 new insurance options including Medicare, Medicaid, TRICARE, Oscar Health
+- Insurance options now sorted alphabetically (A-Z) for improved usability
+- Searchable interface allows typing to filter insurance options
 
 ### Export Functionality
 - Changed from JSON to CSV format for better data analysis

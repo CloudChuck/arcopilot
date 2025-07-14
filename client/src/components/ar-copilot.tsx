@@ -29,8 +29,28 @@ const formSchema = z.object({
   callReference: z.string().optional(),
   denialCode: z.string().optional(),
   denialDescription: z.string().optional(),
-  dateOfService: z.string().optional(),
-  eligibilityFromDate: z.string().optional(),
+  dateOfService: z.string().optional().refine(
+    (val) => {
+      if (!val) return true; // Optional field
+      // Check if it's in MM/DD/YYYY format
+      const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
+      return dateRegex.test(val);
+    },
+    {
+      message: "Date must be in MM/DD/YYYY format",
+    }
+  ),
+  eligibilityFromDate: z.string().optional().refine(
+    (val) => {
+      if (!val) return true; // Optional field
+      // Check if it's in MM/DD/YYYY format
+      const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
+      return dateRegex.test(val);
+    },
+    {
+      message: "Date must be in MM/DD/YYYY format",
+    }
+  ),
   eligibilityStatus: z.string().optional(),
   additionalNotes: z.string().optional(),
 });
@@ -561,12 +581,26 @@ export default function ARCopilot() {
                             <FormItem>
                               <FormLabel>Date of Service (DOS) *</FormLabel>
                               <FormControl>
-                                <Input type="date" {...field} onChange={(e) => {
-                                  field.onChange(e);
-                                  if (activeTabId) {
-                                    updateAccountMutation.mutate({ id: activeTabId, data: { dateOfService: e.target.value } });
-                                  }
-                                }} />
+                                <Input 
+                                  placeholder="MM/DD/YYYY" 
+                                  {...field} 
+                                  onChange={(e) => {
+                                    let value = e.target.value;
+                                    // Auto-format MM/DD/YYYY
+                                    value = value.replace(/\D/g, ''); // Remove non-digits
+                                    if (value.length >= 3) {
+                                      value = value.slice(0, 2) + '/' + value.slice(2);
+                                    }
+                                    if (value.length >= 6) {
+                                      value = value.slice(0, 5) + '/' + value.slice(5, 9);
+                                    }
+                                    field.onChange(value);
+                                    if (activeTabId && value.length === 10) {
+                                      updateAccountMutation.mutate({ id: activeTabId, data: { dateOfService: value } });
+                                    }
+                                  }}
+                                  maxLength={10}
+                                />
                               </FormControl>
                             </FormItem>
                           )}
@@ -575,27 +609,55 @@ export default function ARCopilot() {
                           control={form.control}
                           name="insuranceName"
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="flex flex-col">
                               <FormLabel>Insurance Name *</FormLabel>
-                              <Select value={field.value} onValueChange={(value) => {
-                                field.onChange(value);
-                                if (activeTabId) {
-                                  updateAccountMutation.mutate({ id: activeTabId, data: { insuranceName: value } });
-                                }
-                              }}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select insurance" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {insuranceOptions.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                      {option.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant="outline"
+                                      role="combobox"
+                                      className="w-full justify-between"
+                                    >
+                                      {field.value
+                                        ? insuranceOptions.find((option) => option.value === field.value)?.label
+                                        : "Search insurance..."}
+                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[400px] p-0">
+                                  <Command>
+                                    <CommandInput placeholder="Type insurance name..." />
+                                    <CommandEmpty>No insurance found.</CommandEmpty>
+                                    <CommandList>
+                                      <CommandGroup>
+                                        {insuranceOptions.map((option) => (
+                                          <CommandItem
+                                            value={option.label}
+                                            key={option.value}
+                                            onSelect={() => {
+                                              field.onChange(option.value);
+                                              if (activeTabId) {
+                                                updateAccountMutation.mutate({ id: activeTabId, data: { insuranceName: option.value } });
+                                              }
+                                            }}
+                                          >
+                                            <Check
+                                              className={`mr-2 h-4 w-4 ${
+                                                option.value === field.value
+                                                  ? "opacity-100"
+                                                  : "opacity-0"
+                                              }`}
+                                            />
+                                            {option.label}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </CommandList>
+                                  </Command>
+                                </PopoverContent>
+                              </Popover>
                             </FormItem>
                           )}
                         />
@@ -766,12 +828,26 @@ export default function ARCopilot() {
                             <FormItem>
                               <FormLabel>Eligibility From Date *</FormLabel>
                               <FormControl>
-                                <Input type="date" {...field} onChange={(e) => {
-                                  field.onChange(e);
-                                  if (activeTabId) {
-                                    updateAccountMutation.mutate({ id: activeTabId, data: { eligibilityFromDate: e.target.value } });
-                                  }
-                                }} />
+                                <Input 
+                                  placeholder="MM/DD/YYYY" 
+                                  {...field} 
+                                  onChange={(e) => {
+                                    let value = e.target.value;
+                                    // Auto-format MM/DD/YYYY
+                                    value = value.replace(/\D/g, ''); // Remove non-digits
+                                    if (value.length >= 3) {
+                                      value = value.slice(0, 2) + '/' + value.slice(2);
+                                    }
+                                    if (value.length >= 6) {
+                                      value = value.slice(0, 5) + '/' + value.slice(5, 9);
+                                    }
+                                    field.onChange(value);
+                                    if (activeTabId && value.length === 10) {
+                                      updateAccountMutation.mutate({ id: activeTabId, data: { eligibilityFromDate: value } });
+                                    }
+                                  }}
+                                  maxLength={10}
+                                />
                               </FormControl>
                             </FormItem>
                           )}
