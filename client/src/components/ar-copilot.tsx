@@ -164,9 +164,18 @@ export default function ARCopilot() {
       const response = await apiRequest("PATCH", `/api/accounts/${id}`, data);
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts", sessionId] });
-      toast({ title: "Success", description: "Patient account updated" });
+    onSuccess: (updatedAccount) => {
+      // Update persisted accounts immediately without invalidating queries
+      const updatedAccounts = accounts.map(acc => 
+        acc.id === updatedAccount.id ? updatedAccount : acc
+      );
+      setPersistedAccounts(updatedAccounts);
+      saveToSessionStorage(ACCOUNTS_STORAGE_KEY, updatedAccounts);
+      
+      // Invalidate queries only after a delay to prevent overwriting
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/accounts", sessionId] });
+      }, 100);
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to update patient account", variant: "destructive" });
@@ -194,24 +203,31 @@ export default function ARCopilot() {
 
   const activeAccount = accounts.find(account => account.id === activeTabId);
 
-  // Load active account data into form
+  // Load active account data into form (only when switching tabs, not on data updates)
   useEffect(() => {
     if (activeAccount) {
-      form.reset({
-        patientName: activeAccount.patientName || "",
-        accountNumber: activeAccount.accountNumber || "",
-        insuranceName: activeAccount.insuranceName || "",
-        repName: activeAccount.repName || "",
-        callReference: activeAccount.callReference || "",
-        denialCode: activeAccount.denialCode || "",
-        denialDescription: activeAccount.denialDescription || "",
-        dateOfService: activeAccount.dateOfService || "",
-        eligibilityFromDate: activeAccount.eligibilityFromDate || "",
-        eligibilityStatus: activeAccount.eligibilityStatus || "",
-        additionalNotes: activeAccount.additionalNotes || "",
-      });
+      const currentFormData = form.getValues();
+      // Only reset form if it's actually different data (different account)
+      const isDifferentAccount = currentFormData.patientName !== activeAccount.patientName ||
+                                currentFormData.accountNumber !== activeAccount.accountNumber;
+      
+      if (isDifferentAccount) {
+        form.reset({
+          patientName: activeAccount.patientName || "",
+          accountNumber: activeAccount.accountNumber || "",
+          insuranceName: activeAccount.insuranceName || "",
+          repName: activeAccount.repName || "",
+          callReference: activeAccount.callReference || "",
+          denialCode: activeAccount.denialCode || "",
+          denialDescription: activeAccount.denialDescription || "",
+          dateOfService: activeAccount.dateOfService || "",
+          eligibilityFromDate: activeAccount.eligibilityFromDate || "",
+          eligibilityStatus: activeAccount.eligibilityStatus || "",
+          additionalNotes: activeAccount.additionalNotes || "",
+        });
+      }
     }
-  }, [activeAccount, form]);
+  }, [activeTabId]); // Only depend on activeTabId, not activeAccount
 
   // Auto-set first account as active when accounts load
   useEffect(() => {
@@ -258,8 +274,12 @@ export default function ARCopilot() {
 
   const saveCurrentFormData = async () => {
     if (activeTabId) {
-      const formData = form.getValues();
-      await updateAccountMutation.mutateAsync({ id: activeTabId, data: formData });
+      try {
+        const formData = form.getValues();
+        await updateAccountMutation.mutateAsync({ id: activeTabId, data: formData });
+      } catch (error) {
+        console.error("Error saving form data:", error);
+      }
     }
   };
 
