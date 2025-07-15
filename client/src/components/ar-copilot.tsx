@@ -876,7 +876,7 @@ export default function ARCopilot() {
                           name="eligibilityStatus"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Eligibility Status *</FormLabel>
+                              <FormLabel>Eligibility Status</FormLabel>
                               <Select value={field.value} onValueChange={(value) => {
                                 field.onChange(value);
                                 if (activeTabId) {
@@ -904,7 +904,7 @@ export default function ARCopilot() {
                           name="eligibilityFromDate"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Eligibility From Date *</FormLabel>
+                              <FormLabel>Eligibility From Date</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <Input 
