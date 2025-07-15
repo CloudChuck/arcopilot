@@ -454,7 +454,7 @@ export default function ARCopilot() {
                 hour: 'numeric', 
                 minute: '2-digit', 
                 hour12: true 
-              })}
+              })} IST
             </div>
             <Button variant="outline" onClick={() => {
               clearSessionStorage();
